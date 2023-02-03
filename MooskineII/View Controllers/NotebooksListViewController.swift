@@ -10,11 +10,9 @@ import UIKit
 import CoreData
 
 class NotebooksListViewController: UIViewController, UITableViewDataSource {
-    /// A table view that displays a list of notebooks
+    
     @IBOutlet weak var tableView: UITableView!
 
-    /// The `Notebook` objects being presented
-    
     var notebooks: [Notebook] = []
     
     var dataController: DataController!
@@ -56,12 +54,10 @@ class NotebooksListViewController: UIViewController, UITableViewDataSource {
     // -------------------------------------------------------------------------
     // MARK: - Editing
 
-    /// Display an alert prompting the user to name a new notebook. Calls
     /// `addNotebook(name:)`.
     func presentNewNotebookAlert() {
         let alert = UIAlertController(title: "New Notebook", message: "Enter a name for this notebook", preferredStyle: .alert)
 
-        // Create actions
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self] action in
             if let name = alert.textFields?.first?.text {
@@ -70,7 +66,6 @@ class NotebooksListViewController: UIViewController, UITableViewDataSource {
         }
         saveAction.isEnabled = false
 
-        // Add a text field
         alert.addTextField { textField in
             textField.placeholder = "Name"
             NotificationCenter.default.addObserver(forName: UITextField.textDidChangeNotification, object: textField, queue: .main) { notif in
@@ -87,7 +82,6 @@ class NotebooksListViewController: UIViewController, UITableViewDataSource {
         present(alert, animated: true, completion: nil)
     }
 
-    /// Adds a new notebook to the end of the `notebooks` array
     func addNotebook(name: String) {
         let notebook = Notebook(context: dataController.viewContext)
         notebook.name = name
@@ -98,7 +92,6 @@ class NotebooksListViewController: UIViewController, UITableViewDataSource {
         updateEditButtonState()
     }
 
-    /// Deletes the notebook at the specified index path
     func deleteNotebook(at indexPath: IndexPath) {
         let notebookToDelete = notebook(at: indexPath)
         dataController.viewContext.delete(notebookToDelete)
@@ -137,7 +130,6 @@ class NotebooksListViewController: UIViewController, UITableViewDataSource {
         let aNotebook = notebook(at: indexPath)
         let cell = tableView.dequeueReusableCell(withIdentifier: NotebookCell.defaultReuseIdentifier, for: indexPath) as! NotebookCell
 
-        // Configure cell
         cell.nameLabel.text = aNotebook.name
         if let count = aNotebook.notes?.count {
             let pageString = count /*aNotebook.notes.count*/ == 1 ? "page" : "pages"
@@ -150,11 +142,9 @@ class NotebooksListViewController: UIViewController, UITableViewDataSource {
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         switch editingStyle {
         case .delete: deleteNotebook(at: indexPath)
-        default: () // Unsupported
+        default: ()
         }
     }
-
-    // Helper
 
     var numberOfNotebooks: Int { return notebooks.count }
 
@@ -166,10 +156,13 @@ class NotebooksListViewController: UIViewController, UITableViewDataSource {
     // MARK: - Navigation
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // If this is a NotesListViewController, we'll configure its `Notebook`
         if let vc = segue.destination as? NotesListViewController {
             if let indexPath = tableView.indexPathForSelectedRow {
                 vc.notebook = notebook(at: indexPath)
+                // MARK: NotebooksListViewController: pass `dataController`
+                // 00:25 Now, over in NotebooksListViewController (move there ...) we can pass the DataController instance in prepare for sender (b.ii).
+                // 00:38 Okay, great. So now, we pass both notebook and the CoreDataStack to the NotesList once a notebook is selected (b.iii). Move to 'NotesListViewController.swift' in viewDidLoad()... 
+                vc.dataController = dataController
             }
         }
     }
